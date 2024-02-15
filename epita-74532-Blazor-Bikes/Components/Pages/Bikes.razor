@@ -1,0 +1,102 @@
+﻿@page "/bikes"
+@using System.Text.Json.Serialization;
+@using Microsoft.AspNetCore.Http;
+@using Microsoft.AspNetCore.Mvc;
+@using Newtonsoft.Json;
+@using System.Net.Http;
+@attribute [StreamRendering]
+
+<PageTitle>Bikes</PageTitle>
+
+<h1>Bikes</h1>
+
+<p>This component demonstrates showing data.</p>
+
+@if (stations == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>number</th>
+                <th>contract_name</th>
+                <th>name</th>
+                <th>address</th>
+                <th>banking</th>
+                <th>bonus</th>
+                <th>bike_stands</th>
+                <th>available_bike_stands</th>
+                <th>available_bikes</th>
+                <th>status</th>
+                <th>last_update</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var station in stations)
+            {
+                <tr>
+                    <td>@station.number</td>
+                    <td>@station.contract_name</td>
+                    <td>@station.name</td>
+                    <td>@station.address</td>
+                    <td>@station.banking</td>
+                    <td>@station.bonus</td>
+                    <td>@station.bike_stands</td>
+                    <td>@station.available_bike_stands</td> 
+                    <td>@station.available_bikes</td>
+                    <td>@station.status</td>
+                    <td>@station.last_update</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string contract;
+    private string apiKey;
+    string contractAndKey;
+    Uri baseAddress0 = new Uri("https://api.jcdecaux.com/vls/v1/stations?contract=Dublin&apiKey=3aa66c7d23f6a40af417fc87ba25d34c2d285d4a");
+    Uri baseAddress = new Uri("https://api.jcdecaux.com/vls/v1/stations");
+
+    private HttpClient _httpClient;
+
+    private List<BikeStation>? stations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = new HttpClient();
+        _httpClient.BaseAddress = baseAddress;
+        contract = "Dublin";
+        apiKey = "3aa66c7d23f6a40af417fc87ba25d34c2d285d4a";
+        contractAndKey = $"contract={contract}&apiKey={apiKey}";
+
+        Console.WriteLine($"{baseAddress}?{contractAndKey}");
+        HttpResponseMessage httpResponseMessage = _httpClient.GetAsync($"{baseAddress}?{contractAndKey}").Result;
+
+
+        if (httpResponseMessage.IsSuccessStatusCode)
+        {
+            string data = httpResponseMessage.Content.ReadAsStringAsync().Result;
+            stations = JsonConvert.DeserializeObject<List<BikeStation>>(data);
+        }
+    }
+
+    public class BikeStation
+    {
+        public int number { get; set; }
+        public string contract_name { get; set; }
+        public string name { get; set; }
+        public string address { get; set; }
+        public bool banking { get; set; }
+        public bool bonus { get; set; }
+        public int bike_stands { get; set; }
+        public int available_bike_stands { get; set; }
+        public int available_bikes { get; set; }
+        public string status { get; set; }
+        public long last_update { get; set; }
+    }
+}
